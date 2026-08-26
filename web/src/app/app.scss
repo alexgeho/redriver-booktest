@@ -1,25 +1,19 @@
-// Give the stacked nav items breathing room when the navbar is collapsed
-// into the mobile menu (below the `lg` breakpoint). Desktop is unaffected.
+// Uniform vertical spacing for the stacked mobile menu (below `lg`).
+// Every item — page links, theme toggle, username and logout — gets the
+// exact same gap above and below. Desktop layout is unaffected.
 @media (max-width: 991.98px) {
   #mainNav {
-    padding-top: 0.5rem;
+    padding-top: 0.75rem;
 
     .navbar-nav {
       gap: 0.75rem;
       align-items: flex-start;
 
-      // Separate the two groups (page links vs. theme/user/logout).
+      // Spacing between the two groups equals the gap between items,
+      // so the whole menu keeps one even rhythm.
       & + .navbar-nav {
         margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--bs-border-color);
       }
-    }
-
-    .nav-link,
-    .navbar-text {
-      padding-top: 0.45rem;
-      padding-bottom: 0.45rem;
     }
   }
 }
