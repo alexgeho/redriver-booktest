@@ -1,0 +1,38 @@
+# Production stack for the VPS:
+#   api   — the .NET 9 API (built from api/Dockerfile), listens on 8080 internally
+#   caddy — reverse proxy that terminates HTTPS (auto Let's Encrypt cert) and
+#           forwards traffic to the api container.
+#
+# The JWT signing key is read from a server-only .env file (JWT_KEY=...), so it
+# never lives in the repository.
+
+services:
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__Key: "${JWT_KEY}"
+      # Persist SQLite on a mounted volume so data survives container restarts.
+      ConnectionStrings__Default: "Data Source=/app/data/app.db"
+    volumes:
+      - ./data:/app/data
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  caddy_data:
+  caddy_config:

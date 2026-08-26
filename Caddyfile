@@ -1,0 +1,7 @@
+# Caddy serves the API over HTTPS. The hostname uses sslip.io, which resolves
+# 185.189.51.128.sslip.io -> 185.189.51.128, so Let's Encrypt can issue a real
+# certificate without any DNS configuration. Caddy handles cert issuance and
+# renewal automatically.
+185.189.51.128.sslip.io {
+    reverse_proxy api:8080
+}

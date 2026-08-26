@@ -1,0 +1,3 @@
+# Server-only secrets and runtime data (never commit these).
+.env
+data/
