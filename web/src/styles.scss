@@ -1,0 +1,25 @@
+// Global styles. Bootstrap + Bootstrap Icons + Font Awesome are loaded via angular.json.
+
+html, body {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.app-container {
+  max-width: 960px;
+}
+
+// Smooth theme transition between light/dark.
+body,
+.card,
+.navbar,
+.table {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
