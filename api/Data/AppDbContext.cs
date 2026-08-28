@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
             .HasOne(q => q.User)
             .WithMany(u => u.Quotes)
             .HasForeignKey(q => q.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .IsRequired(false)                 // seeded quotes have no owner
+            .OnDelete(DeleteBehavior.Cascade); // deleting a user removes their quotes
     }
 }

@@ -9,6 +9,7 @@ export interface Quote {
   id: number;
   text: string;
   author: string;
+  isSeed: boolean;
 }
 
 export interface AuthResponse {

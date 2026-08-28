@@ -80,6 +80,22 @@ using (var scope = app.Services.CreateScope())
         );
         db.SaveChanges();
     }
+
+    // --- Seed 5 featured, read-only quotes ---
+    // These belong to no user (UserId = null) and are shown to everyone, but
+    // nobody can edit or delete them. Replace the text/author below with your
+    // own five favourite quotes.
+    if (!db.Quotes.Any(q => q.IsSeed))
+    {
+        db.Quotes.AddRange(
+            new Quote { IsSeed = true, Text = "Favourite quote #1 — replace me.", Author = "Author 1" },
+            new Quote { IsSeed = true, Text = "Favourite quote #2 — replace me.", Author = "Author 2" },
+            new Quote { IsSeed = true, Text = "Favourite quote #3 — replace me.", Author = "Author 3" },
+            new Quote { IsSeed = true, Text = "Favourite quote #4 — replace me.", Author = "Author 4" },
+            new Quote { IsSeed = true, Text = "Favourite quote #5 — replace me.", Author = "Author 5" }
+        );
+        db.SaveChanges();
+    }
 }
 
 app.UseSwagger();

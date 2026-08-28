@@ -19,12 +19,14 @@ public class QuotesController : ControllerBase
     private int CurrentUserId =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    // "Mina citat" — only the current user's quotes.
+    // The 5 featured (read-only) quotes plus the current user's own quotes.
+    // Seed quotes come first, then the user's newest.
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Quote>>> GetMine() =>
         await _db.Quotes
-            .Where(q => q.UserId == CurrentUserId)
-            .OrderByDescending(q => q.Id)
+            .Where(q => q.IsSeed || q.UserId == CurrentUserId)
+            .OrderByDescending(q => q.IsSeed)
+            .ThenByDescending(q => q.Id)
             .ToListAsync();
 
     [HttpPost]
@@ -48,7 +50,7 @@ public class QuotesController : ControllerBase
     public async Task<IActionResult> Update(int id, QuoteDto dto)
     {
         var quote = await _db.Quotes
-            .FirstOrDefaultAsync(q => q.Id == id && q.UserId == CurrentUserId);
+            .FirstOrDefaultAsync(q => q.Id == id && !q.IsSeed && q.UserId == CurrentUserId);
         if (quote is null) return NotFound();
 
         quote.Text = dto.Text.Trim();
@@ -61,7 +63,7 @@ public class QuotesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var quote = await _db.Quotes
-            .FirstOrDefaultAsync(q => q.Id == id && q.UserId == CurrentUserId);
+            .FirstOrDefaultAsync(q => q.Id == id && !q.IsSeed && q.UserId == CurrentUserId);
         if (quote is null) return NotFound();
 
         _db.Quotes.Remove(quote);
