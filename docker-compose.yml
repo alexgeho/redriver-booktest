@@ -19,6 +19,11 @@ services:
       - ./data:/app/data
     expose:
       - "8080"
+    # Publish the API on the host loopback so the VPS's nginx (which terminates
+    # HTTPS for 185.189.51.128.sslip.io) can reach it at http://127.0.0.1:8081.
+    # Bound to 127.0.0.1 so the container is never exposed to the public net.
+    ports:
+      - "127.0.0.1:8081:8080"
 
   caddy:
     image: caddy:2
