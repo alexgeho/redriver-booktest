@@ -83,19 +83,25 @@ using (var scope = app.Services.CreateScope())
 
     // --- Seed 5 featured, read-only quotes ---
     // These belong to no user (UserId = null) and are shown to everyone, but
-    // nobody can edit or delete them. Replace the text/author below with your
-    // own five favourite quotes.
-    if (!db.Quotes.Any(q => q.IsSeed))
+    // nobody can edit or delete them (enforced in QuotesController via IsSeed).
+    //
+    // The five featured quotes are reconciled on every startup: we remove any
+    // existing seed quotes and re-insert the desired set. This is idempotent and
+    // survives a stale/persisted database volume (a plain "seed only if empty"
+    // guard would leave an old DB with the wrong — or zero — featured quotes).
+    // User-added quotes (IsSeed = false) are never touched.
+    var featuredQuotes = new[]
     {
-        db.Quotes.AddRange(
-            new Quote { IsSeed = true, Text = "Favourite quote #1 — replace me.", Author = "Author 1" },
-            new Quote { IsSeed = true, Text = "Favourite quote #2 — replace me.", Author = "Author 2" },
-            new Quote { IsSeed = true, Text = "Favourite quote #3 — replace me.", Author = "Author 3" },
-            new Quote { IsSeed = true, Text = "Favourite quote #4 — replace me.", Author = "Author 4" },
-            new Quote { IsSeed = true, Text = "Favourite quote #5 — replace me.", Author = "Author 5" }
-        );
-        db.SaveChanges();
-    }
+        new Quote { IsSeed = true, Text = "Talk is cheap. Show me the code.", Author = "Linus Torvalds" },
+        new Quote { IsSeed = true, Text = "Programs must be written for people to read, and only incidentally for machines to execute.", Author = "Harold Abelson" },
+        new Quote { IsSeed = true, Text = "First, solve the problem. Then, write the code.", Author = "John Johnson" },
+        new Quote { IsSeed = true, Text = "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.", Author = "Martin Fowler" },
+        new Quote { IsSeed = true, Text = "Simplicity is the soul of efficiency.", Author = "Austin Freeman" }
+    };
+    var existingSeeds = db.Quotes.Where(q => q.IsSeed).ToList();
+    db.Quotes.RemoveRange(existingSeeds);
+    db.Quotes.AddRange(featuredQuotes);
+    db.SaveChanges();
 }
 
 app.UseSwagger();
