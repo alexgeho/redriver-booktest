@@ -56,9 +56,23 @@ export class Login {
     this.auth.login(this.username, this.password).subscribe({
       next: () => this.router.navigate(['/books']),
       error: (err) => {
-        this.error.set(err?.error ?? 'Login failed. Check your credentials.');
+        this.error.set(readHttpError(err, 'Login failed. Check your credentials.'));
         this.loading.set(false);
       },
     });
   }
+}
+
+// Turn an HttpClient error into a human message. Never expose the raw error
+// object (a network failure gives a ProgressEvent that stringifies to
+// "[object XMLHttpRequestProgressEvent]").
+export function readHttpError(err: unknown, fallback: string): string {
+  const e = err as { status?: number; error?: unknown };
+  if (e?.status === 0) return 'Cannot reach the server. Check your connection and try again.';
+  const body = e?.error;
+  if (typeof body === 'string' && body.trim()) return body;
+  if (body && typeof (body as { message?: string }).message === 'string') {
+    return (body as { message: string }).message;
+  }
+  return fallback;
 }

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { readHttpError } from './login';
 
 @Component({
   selector: 'app-register',
@@ -58,7 +59,7 @@ export class Register {
     this.auth.register(this.username, this.password).subscribe({
       next: () => this.router.navigate(['/books']),
       error: (err) => {
-        this.error.set(err?.error ?? 'Registration failed.');
+        this.error.set(readHttpError(err, 'Registration failed.'));
         this.loading.set(false);
       },
     });
