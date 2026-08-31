@@ -12,7 +12,7 @@ export class QuoteService {
 
   constructor(private http: HttpClient) {}
 
-  getMine(): Observable<Quote[]> {
+  getAll(): Observable<Quote[]> {
     return this.http.get<Quote[]>(this.api);
   }
 

@@ -19,18 +19,26 @@ public class QuotesController : ControllerBase
     private int CurrentUserId =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    // The 5 featured (read-only) quotes plus the current user's own quotes.
-    // Seed quotes come first, then the user's newest.
+    // Every quote, from every user, is visible to everyone (newest first).
+    // `Mine` marks the ones the current user owns (only those are editable),
+    // and `OwnerUsername` shows who added each quote.
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Quote>>> GetMine() =>
-        await _db.Quotes
-            .Where(q => q.IsSeed || q.UserId == CurrentUserId)
-            .OrderByDescending(q => q.IsSeed)
-            .ThenByDescending(q => q.Id)
+    public async Task<ActionResult<IEnumerable<QuoteResponse>>> GetAll()
+    {
+        var me = CurrentUserId;
+        return await _db.Quotes
+            .OrderByDescending(q => q.Id)
+            .Select(q => new QuoteResponse(
+                q.Id,
+                q.Text,
+                q.Author,
+                q.User != null ? q.User.Username : null,
+                q.UserId == me))
             .ToListAsync();
+    }
 
     [HttpPost]
-    public async Task<ActionResult<Quote>> Create(QuoteDto dto)
+    public async Task<ActionResult<QuoteResponse>> Create(QuoteDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Text))
             return BadRequest("Quote text is required.");
@@ -43,14 +51,22 @@ public class QuotesController : ControllerBase
         };
         _db.Quotes.Add(quote);
         await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetMine), new { id = quote.Id }, quote);
+
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        var result = new QuoteResponse(quote.Id, quote.Text, quote.Author, username, true);
+        return CreatedAtAction(nameof(GetAll), new { id = quote.Id }, result);
     }
 
+    // Update / delete are owner-only: a quote you don't own returns 404, so
+    // other users can view it but never change or remove it.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, QuoteDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Text))
+            return BadRequest("Quote text is required.");
+
         var quote = await _db.Quotes
-            .FirstOrDefaultAsync(q => q.Id == id && !q.IsSeed && q.UserId == CurrentUserId);
+            .FirstOrDefaultAsync(q => q.Id == id && q.UserId == CurrentUserId);
         if (quote is null) return NotFound();
 
         quote.Text = dto.Text.Trim();
@@ -63,7 +79,7 @@ public class QuotesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var quote = await _db.Quotes
-            .FirstOrDefaultAsync(q => q.Id == id && !q.IsSeed && q.UserId == CurrentUserId);
+            .FirstOrDefaultAsync(q => q.Id == id && q.UserId == CurrentUserId);
         if (quote is null) return NotFound();
 
         _db.Quotes.Remove(quote);

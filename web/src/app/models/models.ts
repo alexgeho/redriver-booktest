@@ -9,7 +9,10 @@ export interface Quote {
   id: number;
   text: string;
   author: string;
-  isSeed: boolean;
+  // Who added the quote, and whether it belongs to the current user.
+  // Everyone sees every quote; only `mine` quotes are editable/deletable.
+  ownerUsername?: string | null;
+  mine: boolean;
 }
 
 export interface AuthResponse {

@@ -6,12 +6,8 @@ public class Quote
     public string Text { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;
 
-    // Featured quotes seeded into the app. Visible to everyone, read-only —
-    // nobody can edit or delete them.
-    public bool IsSeed { get; set; }
-
-    // Owner of a user-added quote. Null for seeded (read-only) quotes.
-    // Only the owner can edit or delete their own quotes.
+    // Owner of the quote. Every quote is visible to all users, but only its
+    // owner can edit or delete it.
     public int? UserId { get; set; }
     public User? User { get; set; }
 }
