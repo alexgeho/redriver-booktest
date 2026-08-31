@@ -85,6 +85,13 @@ using (var scope = app.Services.CreateScope())
     // all quotes are visible to everyone, and only the owner can edit or delete
     // theirs. Nothing to seed here.
     //
+    // Legacy schema fix: older databases created by a previous version have a
+    // NOT NULL `IsSeed` column that this model no longer maps. Because we use
+    // EnsureCreated() (not migrations), that column lingers and breaks inserts
+    // (NOT NULL constraint). Drop it if present; on a fresh DB this is a no-op.
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Quotes DROP COLUMN IsSeed;"); }
+    catch { /* column already absent — nothing to do */ }
+
     // One-time cleanup: earlier versions seeded 5 hardcoded "featured" quotes
     // with no owner (UserId = null). Those are obsolete now — remove any
     // ownerless quotes so only real user-added quotes remain.
