@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuoteService, QuoteInput } from '../services/quote.service';
 import { Quote } from '../models/models';
+import { readHttpError } from './login';
 
 @Component({
   selector: 'app-quote-list',
@@ -39,6 +40,9 @@ import { Quote } from '../models/models';
       <div class="card shadow-sm mb-4">
         <div class="card-body p-4">
           <h2 class="h6 text-body-secondary mb-3">{{ editingId() ? 'Edit quote' : 'Add a quote you like' }}</h2>
+          @if (error()) {
+            <div class="alert alert-danger py-2">{{ error() }}</div>
+          }
           <form (ngSubmit)="save()" #f="ngForm">
             <div class="mb-3">
               <label class="form-label">Quote</label>
@@ -100,6 +104,7 @@ export class QuoteList implements OnInit {
   mine = computed(() => this.quotes().filter((q) => q.mine));
   loading = signal(true);
   editingId = signal<number | null>(null);
+  error = signal('');
   model: QuoteInput = { text: '', author: '' };
 
   ngOnInit(): void {
@@ -118,12 +123,15 @@ export class QuoteList implements OnInit {
   }
 
   save(): void {
+    this.error.set('');
     const id = this.editingId();
     const done = {
       next: () => {
         this.resetForm();
         this.load();
       },
+      error: (err: unknown) =>
+        this.error.set(readHttpError(err, 'Could not save the quote. Try logging out and back in.')),
     };
     if (id !== null) {
       this.quoteSvc.update(id, this.model).subscribe(done);
