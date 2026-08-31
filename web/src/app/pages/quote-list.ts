@@ -13,7 +13,29 @@ import { Quote } from '../models/models';
       <div class="text-center py-4"><span class="spinner-border text-primary"></span></div>
     } @else {
 
-      <!-- Add / edit form for the current user's own quotes -->
+      <!-- Featured, read-only quotes (visible to everyone, not editable) -->
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h2 class="h6 text-body-secondary mb-0">Utvalda citat</h2>
+        <span class="badge text-bg-secondary">
+          <i class="fa-solid fa-lock me-1"></i>Skrivskyddad
+        </span>
+      </div>
+      <div class="row g-3 mb-4">
+        @for (q of featured(); track q.id) {
+          <div class="col-12">
+            <figure class="card shadow-sm border-0 border-start border-4 border-primary bg-body-tertiary mb-0 h-100">
+              <div class="card-body py-3">
+                <p class="mb-1 fst-italic">"{{ q.text }}"</p>
+                @if (q.author) {
+                  <figcaption class="text-body-secondary small mb-0">— {{ q.author }}</figcaption>
+                }
+              </div>
+            </figure>
+          </div>
+        }
+      </div>
+
+      <!-- Add / edit form for the user's own quotes -->
       <div class="card shadow-sm mb-4">
         <div class="card-body p-4">
           <h2 class="h6 text-body-secondary mb-3">{{ editingId() ? 'Edit quote' : 'Add a quote you like' }}</h2>
@@ -38,40 +60,29 @@ import { Quote } from '../models/models';
         </div>
       </div>
 
-      <!-- All quotes from all users. Everyone can read them; only your own
-           show edit/delete controls (others are read-only). -->
-      <h2 class="h6 text-body-secondary mb-2">Alla citat</h2>
-      @if (quotes().length === 0) {
-        <div class="alert alert-info">No quotes yet. Add your favourites above!</div>
+      <!-- The user's own quotes (editable / deletable only by them) -->
+      @if (mine().length === 0) {
+        <div class="alert alert-info">No quotes of your own yet. Add your favourites above!</div>
       } @else {
         <div class="row g-3">
-          @for (q of quotes(); track q.id) {
+          @for (q of mine(); track q.id) {
             <div class="col-12">
-              <div class="card shadow-sm" [class.border-primary]="q.mine" [class.border-start]="q.mine" [class.border-4]="q.mine">
+              <div class="card shadow-sm">
                 <div class="card-body d-flex justify-content-between align-items-start">
                   <figure class="mb-0 me-3">
-                    <p class="mb-1 fst-italic">"{{ q.text }}"</p>
-                    <figcaption class="text-body-secondary small mb-0">
-                      @if (q.author) { — {{ q.author }} }
-                      @if (q.ownerUsername) {
-                        <span class="ms-1"><i class="fa-solid fa-user me-1"></i>{{ q.ownerUsername }}</span>
-                      }
-                    </figcaption>
+                    <p class="mb-1">"{{ q.text }}"</p>
+                    @if (q.author) {
+                      <figcaption class="text-body-secondary small mb-0">— {{ q.author }}</figcaption>
+                    }
                   </figure>
-                  @if (q.mine) {
-                    <div class="text-nowrap">
-                      <button class="btn btn-sm btn-outline-secondary me-1" (click)="startEdit(q)" title="Edit">
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-danger" (click)="remove(q)" title="Delete">
-                        <i class="fa-solid fa-trash"></i>
-                      </button>
-                    </div>
-                  } @else {
-                    <span class="badge text-bg-secondary align-self-center" title="Read-only — you can only edit your own quotes">
-                      <i class="fa-solid fa-lock me-1"></i>Skrivskyddad
-                    </span>
-                  }
+                  <div class="text-nowrap">
+                    <button class="btn btn-sm btn-outline-secondary me-1" (click)="startEdit(q)" title="Edit">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="remove(q)" title="Delete">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -85,6 +96,8 @@ export class QuoteList implements OnInit {
   private quoteSvc = inject(QuoteService);
 
   quotes = signal<Quote[]>([]);
+  featured = computed(() => this.quotes().filter((q) => q.isSeed));
+  mine = computed(() => this.quotes().filter((q) => q.mine));
   loading = signal(true);
   editingId = signal<number | null>(null);
   model: QuoteInput = { text: '', author: '' };

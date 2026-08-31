@@ -9,9 +9,9 @@ export interface Quote {
   id: number;
   text: string;
   author: string;
-  // Who added the quote, and whether it belongs to the current user.
-  // Everyone sees every quote; only `mine` quotes are editable/deletable.
-  ownerUsername?: string | null;
+  // `isSeed` = a featured, read-only quote (shown to everyone, not editable).
+  // `mine` = the current user's own quote (the only editable/deletable ones).
+  isSeed: boolean;
   mine: boolean;
 }
 

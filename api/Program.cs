@@ -81,26 +81,30 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // Quotes are entirely user-generated: every user adds their own favourites,
-    // all quotes are visible to everyone, and only the owner can edit or delete
-    // theirs. Nothing to seed here.
-    //
-    // Legacy schema fix: older databases created by a previous version have a
-    // NOT NULL `IsSeed` column that this model no longer maps. Because we use
-    // EnsureCreated() (not migrations), that column lingers and breaks inserts
-    // (NOT NULL constraint). Drop it if present; on a fresh DB this is a no-op.
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Quotes DROP COLUMN IsSeed;"); }
-    catch { /* column already absent — nothing to do */ }
+    // Schema safety: a previous version dropped the IsSeed column. Because we use
+    // EnsureCreated() (not migrations), re-add it if a persisted DB lacks it, so
+    // the seed logic below doesn't hit "no such column". No-op on a fresh DB.
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Quotes ADD COLUMN IsSeed INTEGER NOT NULL DEFAULT 0;"); }
+    catch { /* column already exists — nothing to do */ }
 
-    // One-time cleanup: earlier versions seeded 5 hardcoded "featured" quotes
-    // with no owner (UserId = null). Those are obsolete now — remove any
-    // ownerless quotes so only real user-added quotes remain.
-    var orphanQuotes = db.Quotes.Where(q => q.UserId == null).ToList();
-    if (orphanQuotes.Count > 0)
+    // --- Seed 5 featured, read-only quotes ---
+    // These belong to no user (UserId = null), are shown to everyone, and can
+    // only be viewed — never edited or deleted (enforced in QuotesController via
+    // IsSeed). They are reconciled on every startup (remove + re-insert) so the
+    // set stays correct even on a persisted database. User-added quotes
+    // (IsSeed = false) are never touched.
+    var featuredQuotes = new[]
     {
-        db.Quotes.RemoveRange(orphanQuotes);
-        db.SaveChanges();
-    }
+        new Quote { IsSeed = true, Text = "You should name a variable using the same care with which you name a first-born child.", Author = "Robert C. Martin" },
+        new Quote { IsSeed = true, Text = "In life there are important and unimportant things, mixing them up is a disaster.", Author = "" },
+        new Quote { IsSeed = true, Text = "At its core, courage means: to risk the known for the unknown, the familiar for the unfamiliar, the comfortable for the uncomfortable. A person never knows if something will work out or not. It's a gamble — but only those who play know what life is.", Author = "" },
+        new Quote { IsSeed = true, Text = "Through thorns to the stars!", Author = "" },
+        new Quote { IsSeed = true, Text = "Don't wish it was easier, wish you were better. Don't wish for less problems, wish for more skills. Don't wish for less challenge, wish for more wisdom.", Author = "Jim Rohn" }
+    };
+    var existingSeeds = db.Quotes.Where(q => q.IsSeed).ToList();
+    db.Quotes.RemoveRange(existingSeeds);
+    db.Quotes.AddRange(featuredQuotes);
+    db.SaveChanges();
 }
 
 app.UseSwagger();
