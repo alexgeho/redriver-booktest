@@ -1,63 +1,57 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom mb-4">
-  <div class="container app-container">
-    <a class="navbar-brand fw-bold" routerLink="/">
+<nav class="navbar bg-body-tertiary border-bottom mb-4">
+  <div class="container app-container flex-wrap gap-2">
+    <a class="navbar-brand fw-bold me-1" routerLink="/">
       <i class="fa-solid fa-book-open me-2 text-primary"></i>BookQuotes
     </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <!-- Primary nav: always visible, also on mobile (no hamburger needed) -->
+    @if (auth.isLoggedIn()) {
+      <ul class="navbar-nav flex-row gap-1 me-auto">
+        <li class="nav-item">
+          <a class="nav-link px-2" routerLink="/books" routerLinkActive="active">
+            <i class="fa-solid fa-book me-1"></i>Books
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-2" routerLink="/quotes" routerLinkActive="active">
+            <i class="fa-solid fa-quote-right me-1"></i>Mina citat
+          </a>
+        </li>
+      </ul>
+    }
 
-    <div class="collapse navbar-collapse" id="mainNav">
+    <ul class="navbar-nav flex-row align-items-center gap-2 ms-auto">
+      <li class="nav-item">
+        <button class="btn btn-outline-secondary btn-sm" (click)="theme.toggle()"
+                [title]="theme.theme() === 'light' ? 'Switch to dark' : 'Switch to light'">
+          @if (theme.theme() === 'light') {
+            <i class="fa-solid fa-moon"></i>
+          } @else {
+            <i class="fa-solid fa-sun"></i>
+          }
+        </button>
+      </li>
+
       @if (auth.isLoggedIn()) {
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/books" routerLinkActive="active">
-              <i class="fa-solid fa-book me-1"></i>Books
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/quotes" routerLinkActive="active">
-              <i class="fa-solid fa-quote-right me-1"></i>Mina citat
-            </a>
-          </li>
-        </ul>
-      }
-
-      <ul class="navbar-nav ms-auto align-items-lg-center">
-        <li class="nav-item me-lg-2">
-          <button class="btn btn-outline-secondary btn-sm" (click)="theme.toggle()"
-                  [title]="theme.theme() === 'light' ? 'Switch to dark' : 'Switch to light'">
-            @if (theme.theme() === 'light') {
-              <i class="fa-solid fa-moon"></i>
-            } @else {
-              <i class="fa-solid fa-sun"></i>
-            }
+        <li class="nav-item d-none d-sm-block">
+          <span class="navbar-text">
+            <i class="fa-solid fa-user me-1"></i>{{ auth.username() }}
+          </span>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-outline-danger btn-sm" (click)="logout()" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i><span class="d-none d-sm-inline ms-1">Logout</span>
           </button>
         </li>
-
-        @if (auth.isLoggedIn()) {
-          <li class="nav-item me-lg-2">
-            <span class="navbar-text">
-              <i class="fa-solid fa-user me-1"></i>{{ auth.username() }}
-            </span>
-          </li>
-          <li class="nav-item">
-            <button class="btn btn-outline-danger btn-sm" (click)="logout()">
-              <i class="fa-solid fa-right-from-bracket me-1"></i>Logout
-            </button>
-          </li>
-        } @else {
-          <li class="nav-item me-lg-2">
-            <a class="btn btn-outline-primary btn-sm" routerLink="/login">Log in</a>
-          </li>
-          <li class="nav-item">
-            <a class="btn btn-primary btn-sm" routerLink="/register">Register</a>
-          </li>
-        }
-      </ul>
-    </div>
+      } @else {
+        <li class="nav-item">
+          <a class="btn btn-outline-primary btn-sm" routerLink="/login">Log in</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary btn-sm" routerLink="/register">Register</a>
+        </li>
+      }
+    </ul>
   </div>
 </nav>
 
